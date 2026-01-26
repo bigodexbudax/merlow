@@ -22,11 +22,13 @@ import {
     SidebarRail,
     SidebarGroup,
     SidebarGroupLabel,
+    useSidebar,
 } from '@/components/ui/sidebar'
 import { UserNav } from '@/components/user-nav'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 interface User {
     id: string
@@ -39,6 +41,7 @@ interface User {
 
 export function AppSidebar({ user, ...props }: { user: User } & React.ComponentProps<typeof Sidebar>) {
     const pathname = usePathname()
+    const { state } = useSidebar()
 
     const items = [
         {
@@ -64,17 +67,28 @@ export function AppSidebar({ user, ...props }: { user: User } & React.ComponentP
 
     return (
         <Sidebar collapsible="icon" {...props}>
-            <SidebarHeader className="h-16 flex items-center justify-center">
-                <Link href="/" className="flex items-center gap-2 font-bold text-xl px-4">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white dark:bg-white dark:text-black">
-                        M
-                    </div>
-                    <span className="group-data-[collapsible=icon]:hidden">Merlow</span>
+            <SidebarHeader className="h-20 flex items-center justify-center p-0">
+                <Link href="/" className={cn(
+                    "flex items-center justify-center transition-all duration-300",
+                    state === 'expanded' ? "px-4 w-full" : "px-0 w-8"
+                )}>
+                    {state === 'expanded' ? (
+                        <img
+                            src="/menu.png"
+                            alt="Merlow Logo"
+                            className="h-10 w-auto object-contain transition-opacity duration-300"
+                        />
+                    ) : (
+                        <img
+                            src="/menu_logo.png"
+                            alt="Merlow Icon"
+                            className="h-12 w-12 object-contain transition-opacity duration-300"
+                        />
+                    )}
                 </Link>
             </SidebarHeader>
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Menu</SidebarGroupLabel>
                     <SidebarMenu>
                         {items.map((item) => (
                             <SidebarMenuItem key={item.title}>
