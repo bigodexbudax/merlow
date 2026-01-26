@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/popover"
 import { cn } from '@/lib/utils'
 
-export function MonthNav({ currentMonth }: { currentMonth: Date }) {
+export function MonthNav({ month, year }: { month: number; year: number }) {
     const router = useRouter()
+    const currentMonth = new Date(year, month - 1, 1)
 
     const handleNavigate = (date: Date) => {
         const y = date.getFullYear()

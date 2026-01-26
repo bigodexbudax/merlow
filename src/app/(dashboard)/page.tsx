@@ -26,7 +26,6 @@ export default async function Home(props: DashboardPageProps) {
   }
 
   // 1. Determine Date Range
-  // Use a reference date that is safe from timezone shifts at the start of day
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonthNum = now.getMonth() + 1
@@ -34,10 +33,13 @@ export default async function Home(props: DashboardPageProps) {
   const year = searchParams.year ? parseInt(searchParams.year) : currentYear
   const month = searchParams.month ? parseInt(searchParams.month) : currentMonthNum
 
-  // Construct date object (month is 0-indexed in Date constructor, but 1-indexed in URL/Params)
+  // Construct start/end dates for the month (Local safe)
+  const startDate = `${year}-${String(month).padStart(2, '0')}-01`
+  const lastDay = new Date(year, month, 0).getDate()
+  const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`
+
+  // For MonthNav and other UI components, we'll pass raw year/month to avoid RSC serialization shifts
   const currentDate = new Date(year, month - 1, 1)
-  const startDate = startOfMonth(currentDate).toISOString().split('T')[0]
-  const endDate = endOfMonth(currentDate).toISOString().split('T')[0]
 
   // 2. Data Fetching
   const [
@@ -107,7 +109,7 @@ export default async function Home(props: DashboardPageProps) {
       <main className="flex-1 container mx-auto max-w-lg p-4 pb-24 space-y-6">
         {/* BLOCK 1: HEADER & SUMMARY */}
         <section className="space-y-4">
-          <MonthNav currentMonth={currentDate} />
+          <MonthNav month={month} year={year} />
           <DashboardSummary
             confirmedTotal={confirmedTotal}
             projectedTotal={projectedTotal}
