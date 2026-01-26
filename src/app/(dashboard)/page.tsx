@@ -37,12 +37,10 @@ export default async function Home(props: DashboardPageProps) {
 
   // 2. Data Fetching
   const [
-    accountsResult,
     categoriesResult,
     entitiesResult,
     eventsResult
   ] = await Promise.all([
-    supabase.from('accounts').select('id, name, type').order('name'),
     supabase.from('categories').select('id, name').order('name'),
     supabase.from('entities').select('id, name').order('name'),
     supabase.from('financial_events')
@@ -53,7 +51,6 @@ export default async function Home(props: DashboardPageProps) {
       .order('event_date', { ascending: false })
   ])
 
-  const accounts = accountsResult.data || []
   const categories = categoriesResult.data || []
   const entities = entitiesResult.data || []
   const events = eventsResult.data || []
@@ -102,7 +99,7 @@ export default async function Home(props: DashboardPageProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-black">
-      <AppHeader user={user} accounts={accounts} signOut={signOut} />
+      <AppHeader user={user} signOut={signOut} />
 
       <main className="flex-1 container mx-auto max-w-lg p-4 pb-24 space-y-6">
         {/* BLOCK 1: HEADER & SUMMARY */}
@@ -128,7 +125,6 @@ export default async function Home(props: DashboardPageProps) {
           ) : (
             <TimelineList
               events={events}
-              accounts={accounts}
               categories={categories}
               entities={entities}
             />
@@ -149,7 +145,6 @@ export default async function Home(props: DashboardPageProps) {
       {/* CTA FIXED BOTTOM */}
       <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-50">
         <CreateEventDialog
-          accounts={accounts}
           categories={categories}
           entities={entities}
           trigger={

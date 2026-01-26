@@ -26,11 +26,10 @@ interface UserNavProps {
         email?: string
         user_metadata?: any
     }
-    accounts: { id: string; name: string; type: string }[]
     signOut: () => Promise<void>
 }
 
-export function UserNav({ user, accounts, signOut }: UserNavProps) {
+export function UserNav({ user, signOut }: UserNavProps) {
     // Logic to determine "active" account could go here (e.g. from cookies or context)
     // For now, we list them.
 
@@ -53,20 +52,6 @@ export function UserNav({ user, accounts, signOut }: UserNavProps) {
                         </p>
                     </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuGroup>
-                    <DropdownMenuLabel>Perfis (Contas)</DropdownMenuLabel>
-                    {accounts.length === 0 && (
-                        <DropdownMenuItem disabled>Nenhum perfil encontrado</DropdownMenuItem>
-                    )}
-                    {accounts.map(account => (
-                        <DropdownMenuItem key={account.id}>
-                            <User className="mr-2 h-4 w-4" />
-                            <span>{account.name}</span>
-                            <span className="ml-auto text-xs text-muted-foreground capitalize">{account.type}</span>
-                        </DropdownMenuItem>
-                    ))}
-                </DropdownMenuGroup>
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                     <DropdownMenuItem asChild>

@@ -9,12 +9,11 @@ import { useState } from 'react'
 
 interface TimelineListProps {
     events: any[]
-    accounts: any[]
     categories: any[]
     entities: any[]
 }
 
-export function TimelineList({ events, accounts, categories, entities }: TimelineListProps) {
+export function TimelineList({ events, categories, entities }: TimelineListProps) {
     const [selectedEvent, setSelectedEvent] = useState<any>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -48,6 +47,11 @@ export function TimelineList({ events, accounts, categories, entities }: Timelin
                                 {event.categories && (
                                     <span className="text-xs text-muted-foreground bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded">
                                         {event.categories.name}
+                                    </span>
+                                )}
+                                {event.payment_method && (
+                                    <span className="text-[10px] uppercase font-bold text-muted-foreground/60 border border-zinc-200 dark:border-zinc-800 px-1.5 rounded-sm">
+                                        {event.payment_method}
                                     </span>
                                 )}
                                 {event.status === 'pendente' && (
@@ -93,7 +97,6 @@ export function TimelineList({ events, accounts, categories, entities }: Timelin
                 <EditEventDialog
                     key={selectedEvent.id}
                     event={selectedEvent}
-                    accounts={accounts}
                     categories={categories}
                     entities={entities}
                     defaultOpen={true}

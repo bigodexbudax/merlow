@@ -11,8 +11,7 @@ export default async function RegistriesPage() {
         return <div>Please login</div>
     }
 
-    const [accounts, categories, entities] = await Promise.all([
-        supabase.from('accounts').select('id, name, type').order('name'),
+    const [categories, entities] = await Promise.all([
         supabase.from('categories').select('*').order('name'),
         supabase.from('entities').select('*').order('name'),
     ])
@@ -26,7 +25,7 @@ export default async function RegistriesPage() {
 
     return (
         <div className="flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-black">
-            <AppHeader user={user} accounts={accounts.data || []} signOut={signOut} />
+            <AppHeader user={user} signOut={signOut} />
             <main className="flex-1">
                 <RegistriesClient
                     categories={categories.data || []}

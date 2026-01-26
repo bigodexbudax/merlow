@@ -11,6 +11,7 @@ const eventSchema = z.object({
     account_id: z.string().uuid().optional().nullable(),
     category_id: z.string().uuid().optional().nullable(),
     entity_id: z.string().uuid().optional().nullable(),
+    payment_method: z.enum(['credito', 'debito', 'pix', 'dinheiro', 'boleto', 'outro']),
     source_type: z.enum(['manual', 'document']).default('manual'),
     // Subflows
     is_recurring: z.boolean().optional(),
@@ -40,6 +41,7 @@ export async function createFinancialEvent(prevState: any, formData: FormData) {
         account_id: formData.get('account_id') || null,
         category_id: formData.get('category_id') || null,
         entity_id: formData.get('entity_id') || null,
+        payment_method: formData.get('payment_method'),
         source_type: 'manual',
         is_recurring: formData.get('is_recurring') === 'on',
         recurrence_interval_value: getOptional('recurrence_interval_value'),
@@ -94,6 +96,7 @@ export async function createFinancialEvent(prevState: any, formData: FormData) {
             account_id: data.account_id,
             category_id: data.category_id,
             entity_id: data.entity_id,
+            payment_method: data.payment_method,
             source_type: data.source_type,
             status: 'confirmado',
             installment: data.is_installment ? 1 : null,
@@ -173,6 +176,7 @@ export async function createFinancialEvent(prevState: any, formData: FormData) {
                         account_id: data.account_id,
                         category_id: data.category_id,
                         entity_id: data.entity_id,
+                        payment_method: data.payment_method,
                         source_type: data.source_type,
                         status: 'pendente',
                         recurrence_id: recurrence.id
@@ -236,6 +240,7 @@ export async function createFinancialEvent(prevState: any, formData: FormData) {
                     account_id: data.account_id,
                     category_id: data.category_id,
                     entity_id: data.entity_id,
+                    payment_method: data.payment_method,
                     source_type: data.source_type,
                     status: 'pendente', // Future installments are pending
                     installment_id: installment.id,
@@ -263,13 +268,14 @@ export async function updateFinancialEvent(id: string, prevState: any, formData:
         category_id: formData.get('category_id') || null,
         account_id: formData.get('account_id') || null,
         entity_id: formData.get('entity_id') || null,
+        payment_method: formData.get('payment_method'),
     }
 
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return { error: 'Unauthorized' }
 
     // MVP: Only allowed to update basic fields as per requirements
-    // "Pode editar: Descrição, Categoria, Account, Entity"
+    // "Pode editar: Descrição, Categoria, Account, Entity, Payment Method"
 
     const { error } = await supabase
         .from('financial_events')
@@ -278,6 +284,7 @@ export async function updateFinancialEvent(id: string, prevState: any, formData:
             category_id: rawData.category_id,
             account_id: rawData.account_id,
             entity_id: rawData.entity_id,
+            payment_method: rawData.payment_method,
             updated_at: new Date().toISOString(),
         })
         .eq('id', id)
