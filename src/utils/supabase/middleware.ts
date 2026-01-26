@@ -30,8 +30,11 @@ export async function updateSession(request: NextRequest) {
         }
     )
 
-    // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
-    // creating a new Response object with NextResponse.next() make sure to:
+    // 4. Finally:
+    //    return myNewResponse
+
+    // IMPORTANT: You *must* return the supabaseResponse object as it is.
+    // If you're creating a new Response object with NextResponse.next() make sure to:
     // 1. Pass the request in it, like so:
     //    const myNewResponse = NextResponse.next({ request })
     // 2. Copy over the cookies, like so:
@@ -40,5 +43,21 @@ export async function updateSession(request: NextRequest) {
     //    the cookies!
     // 4. Finally:
     //    return myNewResponse
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (
+        !user &&
+        !request.nextUrl.pathname.startsWith('/login') &&
+        !request.nextUrl.pathname.startsWith('/auth')
+    ) {
+        // no user, potentially respond by redirecting the user to the login page
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+    }
+
     return supabaseResponse
 }
