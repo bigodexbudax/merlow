@@ -49,6 +49,7 @@ export default async function Home(props: DashboardPageProps) {
       .gte('event_date', startDate)
       .lte('event_date', endDate)
       .order('event_date', { ascending: false })
+      .order('created_at', { ascending: false })
   ])
 
   const categories = categoriesResult.data || []

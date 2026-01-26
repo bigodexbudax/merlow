@@ -58,18 +58,16 @@ export function TimelineList({ events, categories, entities }: TimelineListProps
                                     <Badge variant="secondary" className="text-[10px] h-5">Previsto</Badge>
                                 )}
                                 {event.recurrence_id && (
-                                    <Badge variant="outline" className="text-[10px] h-5 border-blue-500 text-blue-600">Recorrente</Badge>
+                                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white font-black text-[10px] shrink-0 shadow-sm" title="Recorrente">R</div>
                                 )}
                                 {event.installment_id && (
-                                    <Badge variant="outline" className="text-[10px] h-5 border-orange-500 text-orange-600">
-                                        Parcelado
-                                    </Badge>
+                                    <div className="flex items-center justify-center w-5 h-5 rounded-full bg-orange-500 text-white font-black text-[10px] shrink-0 shadow-sm" title="Parcelado">P</div>
                                 )}
                             </div>
                         </div>
                     </div>
 
-                    <div className="text-right flex flex-col items-end">
+                    <div className="text-right flex flex-col items-center">
                         <span className={cn(
                             "font-bold block",
                             event.status === 'pendente' ? "text-muted-foreground" : ""
@@ -78,14 +76,13 @@ export function TimelineList({ events, categories, entities }: TimelineListProps
                         </span>
                         {event.installment_id && event.installment && (() => {
                             const match = event.description?.match(/\((\d+)\/(\d+)\)/)
-                            const total = match ? match[2] : null
+                            const total = match ? Number(match[2]) : null
+                            const current = Number(event.installment)
+                            if (!total) return null
+                            const remaining = total - current
                             return (
-                                <span className="text-[10px] text-muted-foreground mt-0.5">
-                                    Parcela {event.installment}
-                                    {total ? ` de ${total}` : ''}
-                                    {total && (
-                                        <> (faltam {Number(total) - Number(event.installment)})</>
-                                    )}
+                                <span className="text-[10px] text-muted-foreground mt-0.5 font-medium tracking-tighter">
+                                    {remaining > 0 ? `(faltam ${remaining} parcelas)` : '(última)'}
                                 </span>
                             )
                         })()}

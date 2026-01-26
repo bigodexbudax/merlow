@@ -34,11 +34,11 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { createAccount, deleteAccount, createCategory, deleteCategory, createEntity, deleteEntity } from './actions'
+import { createCategory, deleteCategory, createEntity, deleteEntity } from './actions'
 import React from 'react'
 
 type Category = { id: string; name: string }
-type Entity = { id: string; name: string; type: string | null }
+type Entity = { id: string; name: string }
 
 export default function RegistriesClient({
     categories,
@@ -75,7 +75,7 @@ export default function RegistriesClient({
                         title="Empresas"
                         description="Gerencie empresas, lojas, ou prestadores de serviço."
                         data={entities}
-                        columns={['Nome', 'Tipo']}
+                        columns={['Nome']}
                         onDelete={deleteEntity}
                         createForm={<CreateEntityForm onClose={() => { }} />}
                     />
@@ -154,7 +154,6 @@ function RegistriesTab({
                             data.map((item) => (
                                 <TableRow key={item.id}>
                                     <TableCell>{item.name}</TableCell>
-                                    {columns.includes('Tipo') && <TableCell>{item.type || '-'}</TableCell>}
                                     <TableCell>
                                         <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)}>
                                             <Trash2 className="h-4 w-4 text-red-500" />
@@ -170,33 +169,6 @@ function RegistriesTab({
     )
 }
 
-function CreateAccountForm({ onClose }: { onClose: () => void }) {
-    return (
-        <form action={async (formData) => {
-            await createAccount(formData)
-            onClose()
-        }} className="space-y-4">
-            <div className="space-y-2">
-                <Label htmlFor="name">Nome</Label>
-                <Input id="name" name="name" required placeholder="ex: Carteira Principal" />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="type">Tipo</Label>
-                <Select name="type" required defaultValue="personal">
-                    <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="personal">Pessoal</SelectItem>
-                        <SelectItem value="business">Negócios</SelectItem>
-                        <SelectItem value="shared">Compartilhado</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-            <Button type="submit" className="w-full">Criar</Button>
-        </form>
-    )
-}
 
 function CreateCategoryForm({ onClose }: { onClose: () => void }) {
     return (
@@ -222,10 +194,6 @@ function CreateEntityForm({ onClose }: { onClose: () => void }) {
             <div className="space-y-2">
                 <Label htmlFor="name">Nome</Label>
                 <Input id="name" name="name" required placeholder="ex: Amazon" />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="type">Tipo (Opcional)</Label>
-                <Input id="type" name="type" placeholder="ex: Loja" />
             </div>
             <Button type="submit" className="w-full">Criar</Button>
         </form>

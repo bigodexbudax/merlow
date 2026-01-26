@@ -27,9 +27,10 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { InlineCombobox } from '@/components/ui/inline-combobox'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { createFinancialEvent } from '@/app/events/actions'
+import { createFinancialEvent, quickCreateCategory, quickCreateEntity } from '@/app/events/actions'
 
 // Helper types
 type ListOption = { id: string; name: string }
@@ -50,6 +51,8 @@ export function CreateEventDialog({ categories, entities, trigger }: CreateEvent
     const [installmentCount, setInstallmentCount] = useState('')
     const [installmentAmountStr, setInstallmentAmountStr] = useState('')
     const [paymentMethod, setPaymentMethod] = useState<string>('')
+    const [selectedCategory, setSelectedCategory] = useState<string>('')
+    const [selectedEntity, setSelectedEntity] = useState<string>('')
 
     const PAYMENT_METHODS = [
         { id: 'credito', label: 'Crédito', icon: CreditCard, color: 'text-blue-600', bg: 'bg-blue-50/50' },
@@ -105,6 +108,11 @@ export function CreateEventDialog({ categories, entities, trigger }: CreateEvent
             formData.set('installment_amount', numeric.toString())
         }
 
+        // Add payment method, category and entity to formData
+        if (paymentMethod) formData.set('payment_method', paymentMethod)
+        if (selectedCategory) formData.set('category_id', selectedCategory)
+        if (selectedEntity) formData.set('entity_id', selectedEntity)
+
         const result = await createFinancialEvent(null, formData)
         if (result.success) {
             setOpen(false)
@@ -112,6 +120,8 @@ export function CreateEventDialog({ categories, entities, trigger }: CreateEvent
             setInstallmentCount('')
             setInstallmentAmountStr('')
             setPaymentMethod('')
+            setSelectedCategory('')
+            setSelectedEntity('')
         } else {
             const errorMsg = result.details
                 ? JSON.stringify(result.details.fieldErrors, null, 2)
@@ -127,6 +137,8 @@ export function CreateEventDialog({ categories, entities, trigger }: CreateEvent
             setInstallmentCount('')
             setInstallmentAmountStr('')
             setPaymentMethod('')
+            setSelectedCategory('')
+            setSelectedEntity('')
         }
     }
 
@@ -225,31 +237,27 @@ export function CreateEventDialog({ categories, entities, trigger }: CreateEvent
                             <Label className="flex items-center gap-2 text-zinc-500 font-bold uppercase text-[10px] tracking-widest">
                                 <Tag className="h-3 w-3" /> Categoria
                             </Label>
-                            <Select name="category_id">
-                                <SelectTrigger className="bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 h-11 w-full">
-                                    <SelectValue placeholder="Selecione..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map(cat => (
-                                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <InlineCombobox
+                                options={categories}
+                                value={selectedCategory}
+                                onChange={setSelectedCategory}
+                                onAdd={quickCreateCategory}
+                                placeholder="Selecione..."
+                                name="category_id"
+                            />
                         </div>
                         <div className="space-y-2">
                             <Label className="flex items-center gap-2 text-zinc-500 font-bold uppercase text-[10px] tracking-widest">
                                 <Building2 className="h-3 w-3" /> Empresa
                             </Label>
-                            <Select name="entity_id">
-                                <SelectTrigger className="bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 h-11 w-full">
-                                    <SelectValue placeholder="Selecione..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {entities.map(ent => (
-                                        <SelectItem key={ent.id} value={ent.id}>{ent.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <InlineCombobox
+                                options={entities}
+                                value={selectedEntity}
+                                onChange={setSelectedEntity}
+                                onAdd={quickCreateEntity}
+                                placeholder="Selecione..."
+                                name="entity_id"
+                            />
                         </div>
                     </div>
 

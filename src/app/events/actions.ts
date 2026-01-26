@@ -295,3 +295,35 @@ export async function updateFinancialEvent(id: string, prevState: any, formData:
     revalidatePath('/')
     return { success: true }
 }
+export async function quickCreateCategory(name: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+
+    const { data, error } = await supabase
+        .from('categories')
+        .insert({ user_id: user.id, name })
+        .select('id')
+        .single()
+
+    if (error) return null
+    revalidatePath('/')
+    return data.id
+}
+
+export async function quickCreateEntity(name: string) {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return null
+
+    const normalized_name = name.trim().toLowerCase()
+    const { data, error } = await supabase
+        .from('entities')
+        .insert({ user_id: user.id, name, normalized_name })
+        .select('id')
+        .single()
+
+    if (error) return null
+    revalidatePath('/')
+    return data.id
+}
