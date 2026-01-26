@@ -26,9 +26,13 @@ export default async function Home(props: DashboardPageProps) {
   }
 
   // 1. Determine Date Range
+  // Use a reference date that is safe from timezone shifts at the start of day
   const now = new Date()
-  const year = searchParams.year ? parseInt(searchParams.year) : now.getFullYear()
-  const month = searchParams.month ? parseInt(searchParams.month) : (now.getMonth() + 1)
+  const currentYear = now.getFullYear()
+  const currentMonthNum = now.getMonth() + 1
+
+  const year = searchParams.year ? parseInt(searchParams.year) : currentYear
+  const month = searchParams.month ? parseInt(searchParams.month) : currentMonthNum
 
   // Construct date object (month is 0-indexed in Date constructor, but 1-indexed in URL/Params)
   const currentDate = new Date(year, month - 1, 1)
@@ -100,8 +104,6 @@ export default async function Home(props: DashboardPageProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 font-sans dark:bg-black">
-      <AppHeader user={user} signOut={signOut} />
-
       <main className="flex-1 container mx-auto max-w-lg p-4 pb-24 space-y-6">
         {/* BLOCK 1: HEADER & SUMMARY */}
         <section className="space-y-4">
