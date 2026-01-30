@@ -24,13 +24,22 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
   const [scanError, setScanError] = useState<string | null>(null)
   const [previewData, setPreviewData] = useState<ParsedDocumentData | null>(null)
 
+  const normalizeUrl = (raw: string) => raw.trim().replace(/\s+/g, '')
+
   const handleProcessUrl = async (url: string) => {
     setError(null)
     setIsLoading(true)
     setPreviewData(null)
 
+    const normalizedUrl = normalizeUrl(url)
+    if (!normalizedUrl) {
+      setError('URL inválida')
+      setIsLoading(false)
+      return
+    }
+
     try {
-      const result = await fetchNfceHtml(url)
+      const result = await fetchNfceHtml(normalizedUrl)
 
       if (result.error) {
         setError(result.error)
@@ -49,7 +58,7 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
 
   const handleScanSuccess = (decodedUrl: string) => {
     setScanError(null)
-    handleProcessUrl(decodedUrl)
+    handleProcessUrl(decodedUrl.trim().replace(/\s+/g, ''))
   }
 
   const handleManualSubmit = (e: React.FormEvent) => {

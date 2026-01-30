@@ -8,15 +8,20 @@ import { WizardState } from '@/types/qr-code'
 /**
  * Faz fetch do HTML da nota fiscal e retorna dados parseados
  */
+function normalizeQrUrl(url: string): string {
+  return url.trim().replace(/\s+/g, '')
+}
+
 export async function fetchNfceHtml(qrUrl: string) {
   try {
+    const url = normalizeQrUrl(qrUrl)
     // Validação básica
-    if (!qrUrl || !qrUrl.startsWith('http')) {
+    if (!url || !url.startsWith('http')) {
       return { error: 'URL inválida' }
     }
 
     // Fetch do HTML público da SEFAZ
-    const response = await fetch(qrUrl, {
+    const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       },
@@ -31,7 +36,7 @@ export async function fetchNfceHtml(qrUrl: string) {
     const html = await response.text()
     
     // Parse do HTML
-    const parsed = parseNfceHtml(html, qrUrl)
+    const parsed = parseNfceHtml(html, url)
     
     // Validação mínima: deve ter pelo menos chave de acesso ou valor
     if (!parsed.chaveAcesso && !parsed.valorAPagar) {
