@@ -27,8 +27,10 @@ import {
     Wallet,
     QrCode,
     Banknote,
-    MoreHorizontal
+    MoreHorizontal,
+    List
 } from 'lucide-react'
+import { DocumentItemsDialog } from '@/components/events/document-items-dialog'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { formatCurrency } from '@/utils/format'
@@ -45,6 +47,7 @@ interface EditEventDialogProps {
         category_id: string | null
         entity_id: string | null
         payment_method: string | null
+        source_type?: string | null
         installment?: number | null
         installment_id?: string | null
         recurrence_id?: string | null
@@ -58,6 +61,7 @@ interface EditEventDialogProps {
 
 export function EditEventDialog({ event, categories, entities, trigger, onOpenChange, defaultOpen = false }: EditEventDialogProps) {
     const [open, setOpen] = useState(defaultOpen)
+    const [itemsDialogOpen, setItemsDialogOpen] = useState(false)
     const [paymentMethod, setPaymentMethod] = useState<string>(event.payment_method || '')
     const [selectedCategory, setSelectedCategory] = useState<string>(event.category_id || '')
     const [selectedEntity, setSelectedEntity] = useState<string>(event.entity_id || '')
@@ -218,6 +222,18 @@ export function EditEventDialog({ event, categories, entities, trigger, onOpenCh
                         </p>
                     </div>
 
+                    {event.source_type === 'qrcode' && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full h-11 font-medium"
+                            onClick={() => setItemsDialogOpen(true)}
+                        >
+                            <List className="h-4 w-4 mr-2" />
+                            Ver Itens da Nota
+                        </Button>
+                    )}
+
                     <div className="flex gap-2 pt-2 pb-6">
                         <Button type="submit" className="flex-1 h-12 text-md font-bold">
                             Salvar Alterações <ArrowRight className="ml-2 h-4 w-4" />
@@ -225,6 +241,11 @@ export function EditEventDialog({ event, categories, entities, trigger, onOpenCh
                     </div>
                 </form>
             </DialogContent>
+            <DocumentItemsDialog
+                financialEventId={event.id}
+                open={itemsDialogOpen}
+                onOpenChange={setItemsDialogOpen}
+            />
         </Dialog>
     )
 }

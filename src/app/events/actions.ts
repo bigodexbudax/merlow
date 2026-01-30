@@ -12,7 +12,7 @@ const eventSchema = z.object({
     category_id: z.string().uuid().optional().nullable(),
     entity_id: z.string().uuid().optional().nullable(),
     payment_method: z.enum(['credito', 'debito', 'pix', 'dinheiro', 'boleto', 'outro']),
-    source_type: z.enum(['manual', 'document']).default('manual'),
+    source_type: z.enum(['manual', 'documento', 'qrcode']).default('manual'),
     // Subflows
     is_recurring: z.boolean().optional(),
     recurrence_interval_value: z.coerce.number().int().positive().optional(),
@@ -326,4 +326,42 @@ export async function quickCreateEntity(name: string) {
     if (error) return null
     revalidatePath('/')
     return data.id
+}
+
+export type DocumentItemRow = {
+    id: string
+    description: string
+    quantity: number | null
+    unit: string | null
+    unit_price: number | null
+    total_price: number | null
+    sku: string | null
+}
+
+export async function getDocumentItems(financialEventId: string): Promise<
+    { success: true; items: DocumentItemRow[] } | { success: false; error: string }
+> {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { success: false, error: 'Não autorizado' }
+
+    const { data: doc, error: docError } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('financial_event_id', financialEventId)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+    if (docError) return { success: false, error: docError.message }
+    if (!doc) return { success: true, items: [] }
+
+    const { data: items, error: itemsError } = await supabase
+        .from('document_items')
+        .select('id, description, quantity, unit, unit_price, total_price, sku')
+        .eq('document_id', doc.id)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+
+    if (itemsError) return { success: false, error: itemsError.message }
+    return { success: true, items: items ?? [] }
 }

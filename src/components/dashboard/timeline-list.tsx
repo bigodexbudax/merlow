@@ -93,7 +93,7 @@ export function TimelineList({ events, categories, entities }: TimelineListProps
             {selectedEvent && (
                 <EditEventDialog
                     key={selectedEvent.id}
-                    event={selectedEvent}
+                    event={{ ...selectedEvent, source_type: selectedEvent.source_type ?? undefined }}
                     categories={categories}
                     entities={entities}
                     defaultOpen={true}

@@ -6,9 +6,10 @@ import { TimelineList } from '@/components/dashboard/timeline-list'
 import { MonthNav } from '@/components/dashboard/month-nav'
 import { FutureCommitments } from '@/components/dashboard/future-commitments'
 import { CreateEventDialog } from '@/components/events/create-event-dialog'
+import { QrCodeWizard } from '@/components/qr-wizard/qr-code-wizard'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, QrCode } from 'lucide-react'
 import { startOfMonth, endOfMonth, addMonths, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -148,7 +149,18 @@ export default async function Home(props: DashboardPageProps) {
       </main>
 
       {/* CTA FIXED BOTTOM */}
-      <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-50">
+      <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-50 flex flex-col gap-3">
+        {/* Botão QR Code */}
+        <QrCodeWizard
+          categories={categories}
+          entities={entities}
+        >
+          <Button size="icon" className="h-14 w-14 rounded-full shadow-lg bg-gradient-to-br from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700">
+            <QrCode className="h-6 w-6" />
+          </Button>
+        </QrCodeWizard>
+
+        {/* Botão Manual */}
         <CreateEventDialog
           categories={categories}
           entities={entities}
