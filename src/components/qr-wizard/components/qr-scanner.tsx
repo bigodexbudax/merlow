@@ -15,6 +15,7 @@ export function QrScanner({ onScan, onError }: QrScannerProps) {
   const [isScanning, setIsScanning] = useState(false)
   const [hasPermission, setHasPermission] = useState<boolean | null>(null)
   const scannerRef = useRef<Html5Qrcode | null>(null)
+  const hasReportedScan = useRef(false)
   const elementId = 'qr-reader'
 
   const stopScanning = async () => {
@@ -32,6 +33,7 @@ export function QrScanner({ onScan, onError }: QrScannerProps) {
 
   const startScanning = async () => {
     try {
+      hasReportedScan.current = false
       setIsScanning(true)
       
       // Criar nova instância do scanner
@@ -45,12 +47,13 @@ export function QrScanner({ onScan, onError }: QrScannerProps) {
         aspectRatio: 1.0
       }
 
-      // Iniciar scanner
+      // Iniciar scanner (callback pode disparar várias vezes por segundo para o mesmo QR)
       await html5QrCode.start(
         { facingMode: 'environment' }, // Câmera traseira em mobile
         config,
         (decodedText) => {
-          // QR Code detectado!
+          if (hasReportedScan.current) return
+          hasReportedScan.current = true
           stopScanning()
           onScan(decodedText)
         },
