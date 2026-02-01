@@ -12,6 +12,8 @@ function normalizeQrUrl(url: string): string {
   return url.trim().replace(/\s+/g, '')
 }
 
+const SERVER_FETCH_TIMEOUT_MS = 10_000
+
 export async function fetchNfceHtml(qrUrl: string) {
   try {
     const url = normalizeQrUrl(qrUrl)
@@ -20,14 +22,17 @@ export async function fetchNfceHtml(qrUrl: string) {
       return { error: 'URL inválida' }
     }
 
-    // Fetch do HTML público da SEFAZ
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), SERVER_FETCH_TIMEOUT_MS)
+
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
       },
-      // Timeout de 10 segundos
-      signal: AbortSignal.timeout(10000)
+      signal: controller.signal
     })
+
+    clearTimeout(timeoutId)
 
     if (!response.ok) {
       return { error: 'Erro ao buscar nota fiscal. Verifique a URL.' }
@@ -46,7 +51,7 @@ export async function fetchNfceHtml(qrUrl: string) {
     return { success: true, data: parsed }
   } catch (error) {
     console.error('Erro ao buscar NFC-e:', error)
-    if (error instanceof Error && error.name === 'TimeoutError') {
+    if (error instanceof Error && (error.name === 'AbortError' || error.name === 'TimeoutError')) {
       return { error: 'Tempo esgotado ao buscar nota fiscal' }
     }
     return { error: 'Falha ao buscar dados da nota fiscal' }

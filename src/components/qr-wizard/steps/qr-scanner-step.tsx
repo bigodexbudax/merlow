@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { QrScanner } from '../components/qr-scanner'
 import { fetchNfceHtml } from '@/app/qr-events/actions'
+import { parseNfceHtml } from '@/utils/qr-parser'
 import { ParsedDocumentData } from '@/types/qr-code'
 import { Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { formatCurrency } from '@/utils/format'
@@ -39,15 +40,44 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
     }
 
     try {
-      const result = await fetchNfceHtml(normalizedUrl)
-
-      if (result.error) {
-        setError(result.error)
-        return
+      // 1) Tentar carregar a página no cliente (GET sai do IP do usuário, como abrir a URL numa aba)
+      let parsed: ParsedDocumentData | null = null
+      try {
+        const response = await fetch(normalizedUrl, {
+          headers: {
+            Accept: 'text/html',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          },
+          mode: 'cors'
+        })
+        if (response.ok) {
+          const html = await response.text()
+          parsed = parseNfceHtml(html, normalizedUrl)
+        }
+      } catch {
+        // CORS ou rede: fallback para server action
       }
 
-      if (result.success && result.data) {
-        setPreviewData(result.data)
+      // 2) Fallback: se o fetch no cliente falhou, usar server action
+      if (!parsed) {
+        const result = await fetchNfceHtml(normalizedUrl)
+        if (result.error) {
+          setError(result.error)
+          return
+        }
+        if (result.success && result.data) {
+          parsed = result.data
+        }
+      }
+
+      if (parsed) {
+        if (!parsed.chaveAcesso && !parsed.valorAPagar) {
+          setError('Não foi possível extrair dados da nota fiscal')
+          return
+        }
+        setPreviewData(parsed)
+      } else {
+        setError('Não foi possível carregar a página da nota. Verifique a URL ou tente abrir o link em outra aba.')
       }
     } catch (err) {
       setError('Erro ao processar QR Code')
