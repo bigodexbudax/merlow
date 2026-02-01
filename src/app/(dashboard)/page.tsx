@@ -152,6 +152,7 @@ export default async function Home(props: DashboardPageProps) {
       <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-50 flex flex-col gap-3">
         {/* Botão QR Code */}
         <QrCodeWizard
+          key="qr-wizard"
           categories={categories}
           entities={entities}
         >

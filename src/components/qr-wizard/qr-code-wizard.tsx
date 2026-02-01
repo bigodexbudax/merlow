@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { QrScannerStep } from './steps/qr-scanner-step'
 import { EventSummaryStep } from './steps/event-summary-step'
@@ -24,11 +24,19 @@ export function QrCodeWizard({ categories, entities, children }: QrCodeWizardPro
     eventData: null,
     items: []
   })
+  const rawHtmlRef = useRef<string>('')
+  const rawUrlRef = useRef<string>('')
 
   const handleStep1Complete = (data: ParsedDocumentData) => {
+    rawHtmlRef.current = data.rawHtml
+    rawUrlRef.current = data.rawUrl
     setWizardState(prev => ({
       ...prev,
-      parsedDocument: data,
+      parsedDocument: {
+        ...data,
+        rawHtml: '',
+        rawUrl: ''
+      },
       items: data.items
     }))
     setCurrentStep(2)
@@ -51,8 +59,9 @@ export function QrCodeWizard({ categories, entities, children }: QrCodeWizardPro
   }
 
   const handleSaveSuccess = () => {
-    // Fechar dialog e resetar wizard
     setOpen(false)
+    rawHtmlRef.current = ''
+    rawUrlRef.current = ''
     setTimeout(() => {
       setCurrentStep(1)
       setWizardState({
@@ -62,6 +71,17 @@ export function QrCodeWizard({ categories, entities, children }: QrCodeWizardPro
       })
     }, 300)
   }
+
+  const stateForSave: WizardState = wizardState.parsedDocument
+    ? {
+        ...wizardState,
+        parsedDocument: {
+          ...wizardState.parsedDocument,
+          rawHtml: rawHtmlRef.current || wizardState.parsedDocument.rawHtml,
+          rawUrl: rawUrlRef.current || wizardState.parsedDocument.rawUrl
+        }
+      }
+    : wizardState
 
   const handleBack = (step: number) => {
     setCurrentStep(step)
@@ -128,7 +148,7 @@ export function QrCodeWizard({ categories, entities, children }: QrCodeWizardPro
 
           {currentStep === 4 && (
             <SavingStep
-              state={wizardState}
+              state={stateForSave}
               onSuccess={handleSaveSuccess}
               onBack={() => handleBack(3)}
             />

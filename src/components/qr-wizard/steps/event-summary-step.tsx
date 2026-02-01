@@ -52,9 +52,9 @@ export function EventSummaryStep({
   )
   const [error, setError] = useState<string | null>(null)
 
-  // Formatar valor inicial
+  // Formatar valor inicial (dependências só primitivas para evitar reexecuções por referência)
   useEffect(() => {
-    const valorInicial = initialData?.amount || parsedDocument.valorAPagar
+    const valorInicial = initialData?.amount ?? parsedDocument.valorAPagar
     if (valorInicial !== null && valorInicial !== undefined) {
       const formatted = new Intl.NumberFormat('pt-BR', {
         style: 'currency',
@@ -62,7 +62,7 @@ export function EventSummaryStep({
       }).format(valorInicial)
       setAmountStr(formatted)
     }
-  }, [initialData, parsedDocument.valorAPagar])
+  }, [initialData?.amount, parsedDocument.valorAPagar])
 
   // Currency Formatter
   const formatCurrency = (value: string) => {
