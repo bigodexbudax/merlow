@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Html5Qrcode } from 'html5-qrcode'
 import { Button } from '@/components/ui/button'
 import { Camera, Loader2, X } from 'lucide-react'
+import { logFromClient } from '@/app/qr-events/actions'
 
 interface QrScannerProps {
   onScan: (url: string) => void
@@ -22,7 +23,8 @@ export function QrScanner({ onScan, onError }: QrScannerProps) {
         await scannerRef.current.stop()
         scannerRef.current.clear()
       } catch (err) {
-        console.error('Erro ao parar scanner:', err)
+        const detail = err instanceof Error ? err.message : String(err)
+        logFromClient('error', 'QrScanner: erro ao parar scanner', detail)
       }
     }
     setIsScanning(false)
@@ -60,15 +62,20 @@ export function QrScanner({ onScan, onError }: QrScannerProps) {
 
       setHasPermission(true)
     } catch (err) {
-      console.error('Erro ao iniciar scanner:', err)
+      const detail = err instanceof Error ? err.message : String(err)
+      logFromClient('error', 'QrScanner: erro ao iniciar scanner', detail)
       setIsScanning(false)
       setHasPermission(false)
       
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError' || err.message.includes('permission')) {
-          onError?.('Permissão de câmera negada')
+          const msg = 'Permissão de câmera negada'
+          logFromClient('warn', 'QrScanner: usuário recebeu erro', msg)
+          onError?.(msg)
         } else {
-          onError?.('Erro ao acessar câmera')
+          const msg = 'Erro ao acessar câmera'
+          logFromClient('warn', 'QrScanner: usuário recebeu erro', msg)
+          onError?.(msg)
         }
       }
     }

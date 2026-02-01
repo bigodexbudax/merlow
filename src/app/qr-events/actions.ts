@@ -5,6 +5,17 @@ import { revalidatePath } from 'next/cache'
 import { parseNfceHtml } from '@/utils/qr-parser'
 import { WizardState } from '@/types/qr-code'
 
+/** Log enviado pelo cliente: aparece no console do servidor (útil para debug no mobile). */
+export async function logFromClient(
+  level: 'log' | 'warn' | 'error',
+  message: string,
+  detail?: string
+) {
+  const fn = console[level]
+  if (detail != null) fn(`[QR] ${message}`, detail)
+  else fn(`[QR] ${message}`)
+}
+
 /**
  * Faz fetch do HTML da nota fiscal e retorna dados parseados
  */

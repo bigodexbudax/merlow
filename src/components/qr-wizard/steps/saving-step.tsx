@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { saveQrCodeEvent } from '@/app/qr-events/actions'
+import { saveQrCodeEvent, logFromClient } from '@/app/qr-events/actions'
 import { WizardState } from '@/types/qr-code'
 import { Loader2, CheckCircle2, AlertCircle, ArrowLeft } from 'lucide-react'
 
@@ -31,7 +31,9 @@ export function SavingStep({ state, onSuccess, onBack }: SavingStepProps) {
 
         if (result.error) {
           setStatus('error')
-          setError(result.error + (result.details ? `: ${result.details}` : ''))
+          const msg = result.error + (result.details ? `: ${result.details}` : '')
+          setError(msg)
+          logFromClient('error', 'SavingStep: falha ao salvar (reportado ao usuário)', msg)
         } else if (result.success) {
           setStatus('success')
           // Aguardar um pouco para mostrar o sucesso antes de fechar
@@ -42,7 +44,8 @@ export function SavingStep({ state, onSuccess, onBack }: SavingStepProps) {
       } catch (err) {
         setStatus('error')
         setError('Erro inesperado ao salvar lançamento')
-        console.error(err)
+        const detail = err instanceof Error ? err.message : String(err)
+        logFromClient('error', 'SavingStep: erro inesperado ao salvar', detail)
       }
     }
 
@@ -123,7 +126,9 @@ export function SavingStep({ state, onSuccess, onBack }: SavingStepProps) {
                 saveQrCodeEvent(state).then(result => {
                   if (result.error) {
                     setStatus('error')
-                    setError(result.error + (result.details ? `: ${result.details}` : ''))
+                    const msg = result.error + (result.details ? `: ${result.details}` : '')
+                    setError(msg)
+                    logFromClient('error', 'SavingStep: falha ao salvar (reportado ao usuário)', msg)
                   } else if (result.success) {
                     setStatus('success')
                     setTimeout(onSuccess, 1500)

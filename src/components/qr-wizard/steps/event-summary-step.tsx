@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label'
 import { InlineCombobox } from '@/components/ui/inline-combobox'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { quickCreateCategory, quickCreateEntity } from '@/app/events/actions'
+import { logFromClient } from '@/app/qr-events/actions'
 import { ParsedDocumentData, EventData } from '@/types/qr-code'
 import { AlertCircle, CreditCard, Wallet, QrCode, Banknote, FileText, MoreHorizontal, ArrowLeft, ArrowRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -86,16 +87,19 @@ export function EventSummaryStep({
     const amount = Number(amountStr.replace(/[^\d]/g, '')) / 100
     if (!amount || amount <= 0) {
       setError('Valor deve ser maior que zero')
+      logFromClient('warn', 'EventSummaryStep: validação - valor zero ou inválido')
       return
     }
 
     if (!eventDate) {
       setError('Data é obrigatória')
+      logFromClient('warn', 'EventSummaryStep: validação - data obrigatória')
       return
     }
 
     if (!paymentMethod) {
       setError('Selecione um método de pagamento')
+      logFromClient('warn', 'EventSummaryStep: validação - método de pagamento não selecionado')
       return
     }
 
