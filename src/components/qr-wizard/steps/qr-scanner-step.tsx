@@ -24,10 +24,13 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
   const [error, setError] = useState<string | null>(null)
   const [scanError, setScanError] = useState<string | null>(null)
   const [previewData, setPreviewData] = useState<ParsedDocumentData | null>(null)
+  const isProcessingRef = useRef(false)
 
   const normalizeUrl = (raw: string) => raw.trim().replace(/\s+/g, '')
 
   const handleProcessUrl = async (url: string) => {
+    if (isProcessingRef.current) return
+    isProcessingRef.current = true
     setError(null)
     setIsLoading(true)
     setPreviewData(null)
