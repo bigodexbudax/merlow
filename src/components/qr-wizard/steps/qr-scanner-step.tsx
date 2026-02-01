@@ -38,7 +38,6 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
     const normalizedUrl = normalizeUrl(url)
     if (!normalizedUrl) {
       setError('URL inválida')
-      logFromClient('warn', 'QrScannerStep: URL inválida')
       setIsLoading(false)
       return
     }
@@ -57,7 +56,6 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
         if (response.ok) {
           const html = await response.text()
           parsed = parseNfceHtml(html, normalizedUrl)
-          logFromClient('log', 'QrScannerStep: dados obtidos via fetch no cliente')
         }
       } catch {
         // CORS ou rede: fallback para server action
@@ -65,7 +63,6 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
 
       // 2) Fallback: se o fetch no cliente falhou, usar server action
       if (!parsed) {
-        logFromClient('log', 'QrScannerStep: usando server action (fetch cliente falhou ou CORS)')
         const result = await fetchNfceHtml(normalizedUrl)
         if (result.error) {
           setError(result.error)
@@ -74,20 +71,17 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
         }
         if (result.success && result.data) {
           parsed = result.data
-          logFromClient('log', 'QrScannerStep: dados obtidos via server action')
         }
       }
 
       if (parsed) {
         if (!parsed.chaveAcesso && !parsed.valorAPagar) {
           setError('Não foi possível extrair dados da nota fiscal')
-          logFromClient('warn', 'QrScannerStep: não foi possível extrair dados da nota (chave/valor ausentes)')
           return
         }
         setPreviewData(parsed)
       } else {
         setError('Não foi possível carregar a página da nota. Verifique a URL ou tente abrir o link em outra aba.')
-        logFromClient('warn', 'QrScannerStep: não foi possível carregar página da nota')
       }
     } catch (err) {
       setError('Erro ao processar QR Code')

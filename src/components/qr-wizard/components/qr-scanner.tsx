@@ -72,13 +72,9 @@ export function QrScanner({ onScan, onError }: QrScannerProps) {
       
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError' || err.message.includes('permission')) {
-          const msg = 'Permissão de câmera negada'
-          logFromClient('warn', 'QrScanner: usuário recebeu erro', msg)
-          onError?.(msg)
+          onError?.('Permissão de câmera negada')
         } else {
-          const msg = 'Erro ao acessar câmera'
-          logFromClient('warn', 'QrScanner: usuário recebeu erro', msg)
-          onError?.(msg)
+          onError?.('Erro ao acessar câmera')
         }
       }
     }
