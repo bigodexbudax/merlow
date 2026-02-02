@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Merlow | Gestao Financeira Inteligente",
   description: "Gerencie seus lançamentos e compromissos financeiros de forma simples e intuitiva.",
+  icons: {
+    icon: "/favico.png",
+  },
 };
 
 export default function RootLayout({
