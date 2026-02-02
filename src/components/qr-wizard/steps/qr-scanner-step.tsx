@@ -20,6 +20,7 @@ interface QrScannerStepProps {
 
 export function QrScannerStep({ onNext }: QrScannerStepProps) {
   const [manualUrl, setManualUrl] = useState('')
+  const [showManualUrl, setShowManualUrl] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [scanError, setScanError] = useState<string | null>(null)
@@ -113,67 +114,70 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
     }
   }
 
+  const foundData = !!previewData
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Ler QR Code da Nota</h2>
-        <p className="text-muted-foreground mt-1">
-          Escaneie o QR Code da nota fiscal ou cole a URL manualmente
-        </p>
-      </div>
-
-      {/* Scanner de câmera */}
-      <Card className="p-6">
-        <h3 className="font-semibold mb-4">Opção 1: Usar Câmera</h3>
-        <QrScanner 
-          onScan={handleScanSuccess}
-          onError={setScanError}
-        />
-        {scanError && (
-          <Alert variant="destructive" className="mt-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>{scanError}</AlertDescription>
-          </Alert>
-        )}
-      </Card>
-
-      <div className="relative">
-        <div className="absolute inset-0 flex items-center">
-          <Separator />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            ou
-          </span>
-        </div>
-      </div>
-
-      {/* Input manual */}
-      <Card className="p-6">
-        <h3 className="font-semibold mb-4">Opção 2: Colar URL</h3>
-        <form onSubmit={handleManualSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="qr-url">URL da Nota Fiscal</Label>
-            <Input
-              id="qr-url"
-              type="url"
-              placeholder="http://www.fazenda.pr.gov.br/nfce/qrcode?p=..."
-              value={manualUrl}
-              onChange={(e) => setManualUrl(e.target.value)}
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Cole a URL completa do QR Code da nota fiscal
+    <div className="space-y-4">
+      {/* Só mostra título + câmera + colar URL quando ainda não encontrou os dados */}
+      {!foundData && (
+        <>
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">Ler QR Code da Nota</h2>
+            <p className="text-muted-foreground mt-1">
+              Escaneie o QR Code da nota fiscal com a câmera
             </p>
           </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Analisar
-          </Button>
-        </form>
-      </Card>
 
-      {/* Erro */}
+          <Card className="p-5">
+            <QrScanner 
+              onScan={handleScanSuccess}
+              onError={setScanError}
+            />
+            {scanError && (
+              <Alert variant="destructive" className="mt-3">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{scanError}</AlertDescription>
+              </Alert>
+            )}
+          </Card>
+
+          <div className="space-y-2">
+            <button
+              type="button"
+              onClick={() => setShowManualUrl((v) => !v)}
+              className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+            >
+              {showManualUrl
+                ? 'Ocultar opção de colar URL'
+                : 'Não conseguiu ler o QR Code? Cole o link aqui'}
+            </button>
+
+            {showManualUrl && (
+              <Card className="p-3">
+                <form onSubmit={handleManualSubmit} className="space-y-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="qr-url" className="text-sm">URL da Nota Fiscal</Label>
+                    <Input
+                      id="qr-url"
+                      type="url"
+                      placeholder="http://www.fazenda.pr.gov.br/nfce/qrcode?p=..."
+                      value={manualUrl}
+                      onChange={(e) => setManualUrl(e.target.value)}
+                      disabled={isLoading}
+                      className="text-sm"
+                    />
+                  </div>
+                  <Button type="submit" size="sm" className="w-full" disabled={isLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Analisar
+                  </Button>
+                </form>
+              </Card>
+            )}
+          </div>
+        </>
+      )}
+
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -181,53 +185,59 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
         </Alert>
       )}
 
-      {/* Preview dos dados */}
+      {/* Quando encontrou os dados: só o card de resultado (câmera/colar já sumiram) */}
       {previewData && (
-        <Card className="p-6 bg-primary/5 border-primary">
-          <div className="flex items-start gap-3 mb-4">
-            <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+        <Card className="p-5 bg-primary/5 border-2 border-primary shadow-lg ring-2 ring-primary/20 overflow-hidden">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
             <div>
-              <h3 className="font-semibold text-lg">Nota fiscal encontrada!</h3>
-              <p className="text-sm text-muted-foreground">
-                Dados extraídos com sucesso
-              </p>
+              <h3 className="text-lg font-bold tracking-tight">Nota fiscal encontrada!</h3>
+              <p className="text-xs text-muted-foreground">Dados extraídos com sucesso — confira abaixo</p>
             </div>
           </div>
 
-          <Separator className="my-4" />
-
-          <div className="space-y-3 text-sm">
+          <div className="grid gap-3 sm:grid-cols-2 mb-3">
+            {previewData.valorAPagar !== null && (
+              <div className="rounded-lg bg-primary/10 border border-primary/30 p-3 text-center">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-0.5">Valor total</p>
+                <p className="text-xl sm:text-2xl font-bold text-primary">
+                  {formatCurrency(previewData.valorAPagar)}
+                </p>
+              </div>
+            )}
             {previewData.estabelecimento && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Estabelecimento:</span>
-                <span className="font-medium">{previewData.estabelecimento}</span>
+              <div className="rounded-lg bg-primary/10 border border-primary/30 p-3">
+                <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground mb-0.5">Estabelecimento</p>
+                <p className="text-base font-bold truncate" title={previewData.estabelecimento}>
+                  {previewData.estabelecimento}
+                </p>
               </div>
             )}
-            {previewData.cnpj && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">CNPJ:</span>
-                <span className="font-mono text-xs">{previewData.cnpj}</span>
-              </div>
-            )}
+          </div>
+
+          <Separator className="my-3" />
+
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Demais dados</p>
+          <div className="space-y-2 text-sm">
             {previewData.dataCompra && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Data:</span>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Data da compra</span>
                 <span className="font-medium">
                   {new Date(previewData.dataCompra).toLocaleDateString('pt-BR')}
                 </span>
               </div>
             )}
-            {previewData.valorAPagar !== null && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Valor:</span>
-                <span className="font-bold text-lg">
-                  {formatCurrency(previewData.valorAPagar)}
-                </span>
+            {previewData.cnpj && (
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">CNPJ</span>
+                <span className="font-mono text-xs">{previewData.cnpj}</span>
               </div>
             )}
             {previewData.items.length > 0 && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Itens:</span>
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground">Itens na nota</span>
                 <span className="font-medium">{previewData.items.length} produtos</span>
               </div>
             )}
@@ -235,7 +245,7 @@ export function QrScannerStep({ onNext }: QrScannerStepProps) {
 
           <Button 
             onClick={handleConfirm} 
-            className="w-full mt-6"
+            className="w-full mt-4"
             size="lg"
           >
             Próximo: Revisar Lançamento

@@ -99,13 +99,23 @@ export function EventSummaryStep({
       return
     }
 
+    if (!categoryId?.trim()) {
+      setError('Informe a categoria')
+      return
+    }
+
+    if (!entityId?.trim()) {
+      setError('Informe a empresa/entidade')
+      return
+    }
+
     // Montar dados do evento
     const eventData: EventData = {
       amount,
       event_date: eventDate,
       description: description || null,
-      category_id: categoryId || null,
-      entity_id: entityId || null,
+      category_id: categoryId,
+      entity_id: entityId,
       payment_method: paymentMethod as any
     }
 
@@ -189,7 +199,7 @@ export function EventSummaryStep({
 
       {/* Categoria */}
       <div className="space-y-2">
-        <Label>Categoria</Label>
+        <Label>Categoria *</Label>
         <InlineCombobox
           options={categories}
           value={categoryId}
@@ -208,7 +218,7 @@ export function EventSummaryStep({
 
       {/* Entidade */}
       <div className="space-y-2">
-        <Label>Empresa / Entidade</Label>
+        <Label>Empresa / Entidade *</Label>
         <InlineCombobox
           options={entities}
           value={entityId}

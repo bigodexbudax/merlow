@@ -295,6 +295,57 @@ export async function updateFinancialEvent(id: string, prevState: any, formData:
     revalidatePath('/')
     return { success: true }
 }
+
+export async function confirmFinancialEvent(id: string): Promise<{ success: true } | { error: string }> {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Unauthorized' }
+
+    const { data, error } = await supabase
+        .from('financial_events')
+        .update({ status: 'confirmado', updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .eq('status', 'pendente')
+        .select('id')
+        .maybeSingle()
+
+    if (error) return { error: error.message }
+    if (!data) return { error: 'Evento não encontrado ou já confirmado' }
+
+    revalidatePath('/')
+    return { success: true }
+}
+
+export async function deleteFinancialEvent(id: string): Promise<{ success: true } | { error: string }> {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return { error: 'Unauthorized' }
+
+    const { data: doc } = await supabase
+        .from('documents')
+        .select('id')
+        .eq('financial_event_id', id)
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+    if (doc) {
+        await supabase.from('document_items').delete().eq('document_id', doc.id).eq('user_id', user.id)
+        await supabase.from('documents').delete().eq('id', doc.id).eq('user_id', user.id)
+    }
+
+    const { error } = await supabase
+        .from('financial_events')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+    if (error) return { error: error.message }
+
+    revalidatePath('/')
+    return { success: true }
+}
+
 export async function quickCreateCategory(name: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()

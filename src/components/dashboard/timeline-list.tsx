@@ -1,11 +1,20 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { formatCurrency } from '@/utils/format'
 import { EditEventDialog } from '@/components/events/edit-event-dialog'
+import { confirmFinancialEvent, deleteFinancialEvent } from '@/app/events/actions'
 import { useState } from 'react'
+import { Loader2, Trash2 } from 'lucide-react'
 
 interface TimelineListProps {
     events: any[]
@@ -13,13 +22,55 @@ interface TimelineListProps {
     entities: any[]
 }
 
+type PrevistoEvent = { id: string; description?: string | null; amount: number } | null
+
 export function TimelineList({ events, categories, entities }: TimelineListProps) {
     const [selectedEvent, setSelectedEvent] = useState<any>(null)
     const [dialogOpen, setDialogOpen] = useState(false)
+    const [previstoEvent, setPrevistoEvent] = useState<PrevistoEvent>(null)
+    const [previstoAction, setPrevistoAction] = useState<'idle' | 'confirm' | 'delete'>('idle')
 
     const handleRowClick = (event: any) => {
         setSelectedEvent(event)
         setDialogOpen(true)
+    }
+
+    const openPrevistoDialog = (e: React.MouseEvent, event: any) => {
+        e.stopPropagation()
+        setPrevistoEvent({ id: event.id, description: event.description, amount: event.amount })
+    }
+
+    const closePrevistoDialog = () => {
+        setPrevistoEvent(null)
+        setPrevistoAction('idle')
+    }
+
+    const handlePrevistoConfirm = async () => {
+        if (!previstoEvent) return
+        setPrevistoAction('confirm')
+        const result = await confirmFinancialEvent(previstoEvent.id)
+        setPrevistoAction('idle')
+        if ('error' in result) {
+            alert(result.error)
+            return
+        }
+        closePrevistoDialog()
+    }
+
+    const handlePrevistoDelete = async () => {
+        if (!previstoEvent) return
+        const ok = window.confirm(
+            'Tem certeza que deseja apagar apenas este lançamento? As outras parcelas/recorrências não serão alteradas.'
+        )
+        if (!ok) return
+        setPrevistoAction('delete')
+        const result = await deleteFinancialEvent(previstoEvent.id)
+        setPrevistoAction('idle')
+        if ('error' in result) {
+            alert(result.error)
+            return
+        }
+        closePrevistoDialog()
     }
 
     return (
@@ -55,7 +106,15 @@ export function TimelineList({ events, categories, entities }: TimelineListProps
                                     </span>
                                 )}
                                 {event.status === 'pendente' && (
-                                    <Badge variant="secondary" className="text-[10px] h-5">Previsto</Badge>
+                                    <Badge asChild variant="secondary" className="text-[10px] h-5 cursor-pointer hover:opacity-90">
+                                        <button
+                                            type="button"
+                                            onClick={(e) => openPrevistoDialog(e, event)}
+                                            className="focus:outline-none focus:ring-2 focus:ring-ring rounded-full"
+                                        >
+                                            Previsto
+                                        </button>
+                                    </Badge>
                                 )}
                                 {event.recurrence_id && (
                                     <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-600 text-white font-black text-[10px] shrink-0 shadow-sm" title="Recorrente">R</div>
@@ -67,7 +126,7 @@ export function TimelineList({ events, categories, entities }: TimelineListProps
                         </div>
                     </div>
 
-                    <div className="text-right flex flex-col items-center">
+                    <div className="text-right flex flex-col items-end gap-1">
                         <span className={cn(
                             "font-bold block",
                             event.status === 'pendente' ? "text-muted-foreground" : ""
@@ -106,6 +165,48 @@ export function TimelineList({ events, categories, entities }: TimelineListProps
                     }}
                 />
             )}
+
+            <Dialog open={!!previstoEvent} onOpenChange={(open) => !open && closePrevistoDialog()}>
+                <DialogContent className="sm:max-w-[440px] p-0 border-none gap-0 overflow-hidden">
+                    <div className="bg-[linear-gradient(90deg,#62bfd4,#f1dd76)] px-6 pt-6 pb-5 text-zinc-950">
+                        <DialogHeader className="space-y-2">
+                            <DialogTitle className="text-lg font-bold text-zinc-900">
+                                O que fazer com este lançamento?
+                            </DialogTitle>
+                            {previstoEvent && (
+                                <p className="text-sm font-medium text-zinc-800/90 pt-0.5">
+                                    {previstoEvent.description || 'Sem descrição'} · {formatCurrency(previstoEvent.amount)}
+                                </p>
+                            )}
+                        </DialogHeader>
+                    </div>
+                    <div className="p-6 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+                        <Button
+                            variant="ghost"
+                            onClick={handlePrevistoDelete}
+                            disabled={previstoAction !== 'idle'}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 sm:order-1"
+                        >
+                            {previstoAction === 'delete' ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : (
+                                <Trash2 className="h-4 w-4 mr-2" />
+                            )}
+                            Apagar
+                        </Button>
+                        <Button
+                            onClick={handlePrevistoConfirm}
+                            disabled={previstoAction !== 'idle'}
+                            className="sm:order-2"
+                        >
+                            {previstoAction === 'confirm' ? (
+                                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            ) : null}
+                            Confirmar cobrança
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
