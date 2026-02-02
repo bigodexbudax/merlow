@@ -10,7 +10,7 @@ import { QrCodeWizard } from '@/components/qr-wizard/qr-code-wizard'
 import { Separator } from '@/components/ui/separator'
 import { Button } from '@/components/ui/button'
 import { Plus, QrCode } from 'lucide-react'
-import { startOfMonth, endOfMonth, addMonths, format } from 'date-fns'
+import { startOfMonth, endOfMonth, addMonths, subMonths, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
 interface DashboardPageProps {
@@ -72,30 +72,43 @@ export default async function Home(props: DashboardPageProps) {
     .filter(e => e.status === 'pendente')
     .reduce((acc, curr) => acc + curr.amount, 0)
 
-  // 4. Fetch Future Commitments
-  // Simple view: next 3 months
-  const futureMonthsData = []
-  for (let i = 1; i <= 3; i++) {
-    const futureDate = addMonths(currentDate, i)
-    const fStart = startOfMonth(futureDate).toISOString().split('T')[0]
-    const fEnd = endOfMonth(futureDate).toISOString().split('T')[0]
+  // 4. Fetch Future Commitments — 12 months (3 antes + atual + 8 à frente), single query
+  const realNow = new Date()
+  const firstMonth = startOfMonth(subMonths(realNow, 3))
+  const lastMonth = endOfMonth(addMonths(realNow, 8))
+  const rangeStart = firstMonth.toISOString().split('T')[0]
+  const rangeEnd = lastMonth.toISOString().split('T')[0]
 
-    // We fetch aggregate sum for pending events in that month
-    const { data: futureEvents } = await supabase
-      .from('financial_events')
-      .select('amount')
-      .eq('user_id', user.id)
-      .eq('status', 'pendente')
-      .gte('event_date', fStart)
-      .lte('event_date', fEnd)
+  const { data: pendingInRange } = await supabase
+    .from('financial_events')
+    .select('event_date, amount')
+    .eq('user_id', user.id)
+    .eq('status', 'pendente')
+    .gte('event_date', rangeStart)
+    .lte('event_date', rangeEnd)
 
-    const sum = futureEvents?.reduce((acc, curr) => acc + curr.amount, 0) || 0
-    if (sum > 0) {
-      futureMonthsData.push({
-        month: format(futureDate, 'MMMM', { locale: ptBR }),
-        amount: sum
-      })
-    }
+  const sumsByMonth: Record<string, number> = {}
+  for (let i = 0; i < 12; i++) {
+    const d = addMonths(firstMonth, i)
+    const key = format(d, 'yyyy-MM')
+    sumsByMonth[key] = 0
+  }
+  for (const e of pendingInRange || []) {
+    const key = (e.event_date as string).slice(0, 7)
+    if (sumsByMonth[key] !== undefined) sumsByMonth[key] += e.amount
+  }
+
+  const futureMonthsData: { month: string; amount: number; monthKey: string; isCurrent: boolean }[] = []
+  const currentKey = format(realNow, 'yyyy-MM')
+  for (let i = 0; i < 12; i++) {
+    const d = addMonths(firstMonth, i)
+    const monthKey = format(d, 'yyyy-MM')
+    futureMonthsData.push({
+      month: format(d, 'MMMM', { locale: ptBR }),
+      amount: sumsByMonth[monthKey] ?? 0,
+      monthKey,
+      isCurrent: monthKey === currentKey
+    })
   }
 
   const signOut = async () => {
@@ -139,12 +152,10 @@ export default async function Home(props: DashboardPageProps) {
 
         <Separator />
 
-        {/* BLOCK 4: FUTURE */}
-        {futureMonthsData.length > 0 && (
-          <section>
-            <FutureCommitments data={futureMonthsData} />
-          </section>
-        )}
+        {/* BLOCK 4: FUTURE — 12 meses em slider */}
+        <section>
+          <FutureCommitments data={futureMonthsData} />
+        </section>
 
       </main>
 

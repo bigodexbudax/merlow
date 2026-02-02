@@ -29,6 +29,11 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Notas
+
+- **Aviso "Unknown env config devdir"**: Esse aviso vem da configuração global do npm ou da variável de ambiente `NPM_CONFIG_DEVDIR`. Para remover: execute `npm config delete devdir` (remove do npm global) ou desative a variável no seu ambiente/shell.
+- O projeto usa **proxy** (Next.js 16) em vez de middleware; a lógica de sessão do Supabase fica em `src/proxy.ts` e `src/utils/supabase/middleware.ts`.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
